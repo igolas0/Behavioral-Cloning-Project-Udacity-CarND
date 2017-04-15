@@ -6,7 +6,7 @@ import sklearn
 
 #load recorded data from "driving_log.csv"
 samples = []
-with open('/home/igolaso/Desktop/data/driving_log.csv') as csvfile:
+with open('/home/igolaso/Desktop/data/6lapstrack1/driving_log.csv') as csvfile:
 	reader = csv.reader(csvfile)
 	for line in reader:
 		samples.append(line)
@@ -16,16 +16,28 @@ samples = sklearn.utils.shuffle(samples)
 
 #split samples into training and validation sets (80% to 20%)
 train_samples, validation_samples = train_test_split(samples, test_size=0.2)
-print(len(train_samples)+ len(validation_samples))
+print('train',len(train_samples))
+print('train#valid',len(train_samples)+ len(validation_samples))
 
+large_steer_train_samples = []
+larger_steer_train_samples = []
+
+for sample in train_samples:
+   if abs(float(sample[3]))>=0.1:
+      large_steer_train_samples.append(sample)
+   if abs(float(sample[3]))>=0.3:
+      larger_steer_train_samples.append(sample)
+print('large steer train',len(large_steer_train_samples))
+print('largeR steer train',len(larger_steer_train_samples))
 #define generator to feed neural net input on demand (in batches) instead
 # of storing data in memory
 def generator(samples, batch_size=24):
         num_samples = len(samples)
         while 1: # Loop forever
+
            #sklearn.utils.shuffle(samples)
            for offset in range(0, num_samples, int(batch_size/6)):
-               batch_samples = samples[offset:offset+batch_size]
+               batch_samples = samples[offset:offset+int(batch_size/6)]
                images = []
                measurements = []
 
@@ -40,7 +52,7 @@ def generator(samples, batch_size=24):
                    for i in range(3):
                        source_path = batch_sample[i]
                        filename = source_path.split('/')[-1]
-                       current_path = '/home/igolaso/Desktop/data/IMG/' + filename
+                       current_path = '/home/igolaso/Desktop/data/6lapstrack1/IMG/' + filename
                        image = cv2.imread(current_path)
                        image_flipped = np.fliplr(image)
                        images.extend((image, image_flipped))
@@ -49,7 +61,8 @@ def generator(samples, batch_size=24):
                y_train = np.array(measurements)
                yield X_train, y_train
 
-
+train_larger_steer_generator = generator(larger_steer_train_samples, batch_size = 24)
+train_large_steer_generator = generator(large_steer_train_samples, batch_size = 24)
 train_generator = generator(train_samples, batch_size = 24)
 validation_generator = generator(validation_samples, batch_size = 24)
 
@@ -81,8 +94,15 @@ model.add(Dense(1))
 
 model.compile(loss='mse', optimizer='adam')
 
+model.fit_generator(train_larger_steer_generator, samples_per_epoch = 6*len(larger_steer_train_samples),
+                    validation_data=validation_generator, 
+                   nb_val_samples= 6*len(validation_samples), nb_epoch=4)
+model.fit_generator(train_large_steer_generator, samples_per_epoch = 6*len(large_steer_train_samples),
+                    validation_data=validation_generator, 
+                   nb_val_samples= 6*len(validation_samples), nb_epoch=4)
+
 model.fit_generator(train_generator, samples_per_epoch = 6*len(train_samples),
                     validation_data=validation_generator, 
-                   nb_val_samples= 6*len(validation_samples), nb_epoch=10)
+                   nb_val_samples= 6*len(validation_samples), nb_epoch=3)
 
 model.save('model.h5')
