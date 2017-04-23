@@ -44,7 +44,7 @@ def generator(samples, batch_size=24):
                for batch_sample in batch_samples:
                    steering_center = float(batch_sample[3])
 	           #create adjusted steering angles for side camera images
-                   correction = 0.2
+                   correction = 0.22
                    steering_left = steering_center + correction
                    steering_right = steering_center - correction
                    measurements.extend((steering_center, steering_center*-1.0, steering_left, steering_left*-1.0, steering_right, steering_right*-1.0))
@@ -74,22 +74,25 @@ from keras.layers.pooling import MaxPooling2D
 model = Sequential()
 model.add(Lambda(lambda x: x / 255.0 - 0.5, input_shape=(160,320,3)))
 model.add(Cropping2D(cropping=((65,15),(0,0))))
-model.add(Convolution2D(16,3,3,activation="relu"))
+model.add(Convolution2D(3,1,1,activation="relu"))
 model.add(MaxPooling2D())
 model.add(Convolution2D(32,3,3,activation="relu"))
+model.add(Convolution2D(32,3,3,activation="relu"))
 model.add(MaxPooling2D())
+model.add(Dropout(0.5))
+model.add(Convolution2D(64,3,3,activation="relu"))
 model.add(Convolution2D(64,3,3,activation="relu"))
 model.add(MaxPooling2D())
+model.add(Dropout(0.5))
+model.add(Convolution2D(128,3,3,activation="relu"))
 model.add(Convolution2D(128,3,3,activation="relu"))
 model.add(MaxPooling2D())
-model.add(Convolution2D(256,3,3,activation="relu"))
+model.add(Dropout(0.5))
 model.add(Flatten())
-model.add(Dense(8096))
-#model.add(Dropout(0.5))
-model.add(Dense(800))
-#model.add(Dropout(0.5))
-model.add(Dense(120))
-#model.add(Dropout(0.5))
+model.add(Dense(1152))
+model.add(Dense(100))
+model.add(Dense(50))
+model.add(Dense(10))
 model.add(Dense(1))
 
 model.compile(loss='mse', optimizer='adam')

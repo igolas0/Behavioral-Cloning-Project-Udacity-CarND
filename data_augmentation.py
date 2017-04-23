@@ -19,17 +19,6 @@ def augment_brightness_camera_images(image):
     image1 = cv2.cvtColor(image1,cv2.COLOR_HSV2RGB)
     return image1
 
-def trans_image(image,steer,trans_range):
-    # Translation
-    tr_x = trans_range*np.random.uniform()-trans_range/2
-    steer_ang = steer + tr_x/trans_range*2*.2
-    tr_y = 40*np.random.uniform()-40/2
-    #tr_y = 0
-    Trans_M = np.float32([[1,0,tr_x],[0,1,tr_y]])
-    image_tr = cv2.warpAffine(image,Trans_M,(cols,rows))
-    
-    return image_tr,steer_ang
-
 def add_random_shadow(image):
     top_y = 320*np.random.uniform()
     top_x = 0
@@ -54,8 +43,6 @@ def add_random_shadow(image):
 
     return image
 
-
-
 def preprocess_image_file_train(line_data):
     i_clr = np.random.randint(3)
     correction = 0.25
@@ -73,10 +60,8 @@ def preprocess_image_file_train(line_data):
     current_path = '/home/igolaso/Desktop/data/IMG/' + filename
     image = cv2.imread(current_path)
     image = cv2.cvtColor(image,cv2.COLOR_BGR2RGB)
-    #image,y_steer = trans_image(image,y_steer,100)
     image = augment_brightness_camera_images(image)
     image = add_random_shadow(image)
-    #image = preprocessImage(image)
     image = np.array(image)
     ind_flip = np.random.randint(2)
     if ind_flip==0:
@@ -114,21 +99,6 @@ def generator(samples,batch_size = 256):
         y_train = np.array(measurements)
         yield X_train, y_train
 
-def visualize(fig, rows, cols, imgs, titles):
-   for i, img in enumerate(imgs):
-      plt.subplot(rows, cols, i+1)
-      plt.title(i+1)
-      img_dims = len(img.shape)
-      if img_dims < 3:
-         img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
-         plt.imshow(img, cmap='hot')
-         plt.title(titles[i])
-      else:
-         img = cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
-         plt.imshow(img)
-         plt.title(titles[i])
-
-
 samples = []
 #with open('/home/igolaso/Desktop/data/6lapstrack1/driving_log.csv') as csvfile:
 with open('/home/igolaso/Desktop/data/driving_log.csv') as csvfile:
@@ -153,6 +123,8 @@ from keras.models import Sequential
 from keras.layers import Flatten, Dense, Lambda, Cropping2D, Dropout
 from keras.layers.convolutional import Convolution2D
 from keras.layers.pooling import MaxPooling2D
+#from .losses import mean_squared_error
+#from .losses import mean_absolute_error
 
 model = Sequential()
 model.add(Lambda(lambda x: x / 255.0 - 0.5, input_shape=(160,320,3)))
@@ -175,9 +147,11 @@ model.add(Dense(100))
 #model.add(Dropout(0.5))
 model.add(Dense(1))
 
-model.compile(loss='mse', optimizer='adagrad')
+# Aliases
 
-model = load_model('testmodel.h5')
+model.compile(loss='mse', optimizer='adam')
+
+#model = load_model('model.h5')
 
 pr_threshold = 0.5
 
@@ -185,4 +159,4 @@ model.fit_generator(train_generator, samples_per_epoch = 16384,
                     validation_data=validation_generator, 
                    nb_val_samples= len(validation_samples), nb_epoch=5)
 
-model.save('testmodel.h5')
+model.save('model.h5')
