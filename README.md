@@ -37,7 +37,7 @@ python drive.py model.h5
 
 "data_augmentation.py" contains the CNN model. The file shows the pipeline I used for training and validating the model.
 
-#### 2. Model Architecture and Training Strategy
+#### 2. Model Architecture 
 
 My model consists of a convolution neural network with 3x3 filter sizes and depths between 16 and 256 (data_augmentation.py lines 129-148) 
 
@@ -86,7 +86,9 @@ I used a threshold of 1.0 for the first epoch (which means 100% probability of n
 
 Below the distribution of 2000 random selected samples by the generator depicted in a binned histogram. The x-axis corresponds to the steering angles:
 
-#### 6. Managing Overfitting
+![alt text][image4]
+
+#### 6. Managing Overfitting and Training Strategy
 
 While I experimented with some dropout layers I did not use them, since overfitting turned not to be a problem. While the model used was relatively large, the input images were rather large (80x320 after cropping). The data augmentation also kept the model from overfitting. Here is a screenshot of the model training over 5 epochs to prove that the model does not overfit:
 
@@ -100,19 +102,17 @@ The model was tested after every epoch on the simulator checking if the vehicle 
 An adam optimizer was chosen for training and thus the learning rate was not tuned manually (data_augmentation.py line 152).
 
 
-![alt text][image4]
 
 
 #### 7. Testing the model 
 
-The final step was to run the simulator to see how well the car was driving around track one. After a lot of testing and iterations I was able to come with the model described above and successfully driving around track1 and 2.
+The final step was to run the simulator to see how well the car was driving around track one. After a lot of testing and tweaking I was able to come with the model described above which successfully drives around track1 and 2.
 
-Here is a video of the model driving autonomously around [Track1](./track1.mp4) and [Track2](./track2.mp4).
+Here are two video links showing the model driving autonomously around [Track1](./track1.mp4) and [Track2](./track2.mp4).
 
 I also trained a model which outputs also the throttle value as well and successfully drives around [Track1 with throttle](./track1_throttle.mp4). On track 2 it does not come very far but it is a lot of fun to watch [Track2 with throttle](./track2_throttle.mp4). A big problem here comes from using the keyboard for speeding up (which produces unevenly distributed data) and also from the signal itself which combines the throttle (positive values) with the brake signal (negative values). Maybe some preprocessing of the signal and perhaps separating the throttle and brake functions into different signals could help here.
 
-This project was lots of fun. I could spend forever optimizing this. Still I felt that it was difficult judging the robustness of the pipeline before testing on the simulator. Actually very recently NVIDIA has released a paper which visualizes the learned features. It seems that the CNN learns to steer the car by learning to detect salient objects like edges of the road, parked cars and lane marks: ["Explaining How a Deep Neural Network Trained with
-End-to-End Learning Steers a Car".]("https://arxiv.org/pdf/1704.07911.pdf)
+This project was lots of fun. I could spend forever optimizing this. Still I felt that it was difficult judging the robustness of the pipeline before testing on the simulator. Actually very recently NVIDIA has released a paper which visualizes the learned features. It seems that the CNN learns to steer the car by learning to detect salient objects like edges of the road, parked cars and lane marks: [Explaining How a Deep Neural Network Trained with End-to-End Learning Steers a Car](https://arxiv.org/pdf/1704.07911.pdf).
 
 The main thing I would spend time on for further work on this project would be the data augmentation. I might skip using left and right cameras and instead use random translational shifts of the images (to the sides and also vertically to simulate road slope) while also correcting the steering angle depending of how big the shift was. It would be awesome to achieve generalizing to track 2 while training only on track 1 images.
 
