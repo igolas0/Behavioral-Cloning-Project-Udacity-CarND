@@ -5,12 +5,15 @@
 
 [image1]: ./output_images/test.png "Data Augmentation"
 [image2]: ./output_images/test2.png "Data Augmentation"
-[image3]: ./output_images/data.png "Data Distribution"
+[image3]: ./output_images/val_loss.png "Validation loss"
+[image4]: ./output_images/data.png "Data Distribution"
 
 Overview
 ---
 
-In this project a convolutional neural network is used to clone driving behavior. First driving data is collected using a simulator and then a convolutional neural network is trained and tested using Keras. The model will output a steering angle to an autonomous vehicle. Finally, I also do some experimentation with a model that outputs both steering angle and throttle values.
+In this project a convolutional neural network is used to clone human driving behavior in a simulator. First, driving data is collected using a simulator and then a convolutional neural network is trained on this data and tested using Keras. The model will output a steering angle to a vehicle which drives autonomously around the track. Finally, I also do some experimentation with a model that learns not only to control the steering angle but also the throttle.
+
+Project Results:
 
  The trained model drives the car autonomously around the track1 and the harder track2 of the simulator. Videos of the recorded laps driving autonomously are provided.
 
@@ -20,13 +23,12 @@ In this project a convolutional neural network is used to clone driving behavior
 
 #### 1. Project Files Overview 
 
-My project includes the following files:
+My project includes mainly the following files:
 * data_augmentation.py containing the script to create and train the model
 * drive.py for driving the car in autonomous mode
-* drive_with_throttle.py for driving the car in autonomous mode using the trained model that also outputs throttle values.
 * model.h5 containing a trained convolution neural network 
-* model_throttle.h5 containing a trained convolution neural network that outputs steering angles and throttle values.
 * README.md summarizing the results
+* Videos of the model driving autonomously (.mp4 format).
 
 Using the Udacity provided simulator and my drive.py file, the car can be driven autonomously around the track by executing 
 ```sh
@@ -37,37 +39,30 @@ python drive.py model.h5
 
 #### 2. Model Architecture and Training Strategy
 
-My model consists of a convolution neural network with 3x3 filter sizes and depths between 16 and 256 (model.py lines 129-148) 
+My model consists of a convolution neural network with 3x3 filter sizes and depths between 16 and 256 (data_augmentation.py lines 129-148) 
 
-The model includes RELU layers to introduce nonlinearity (code line 132,134,136,138,140), and the data is normalized in the model using a Keras lambda layer (code line 130). 
+The model includes RELU layers to introduce nonlinearity (code lines 132,134,136,138,140), and the data is normalized using a Keras lambda layer (code line 130). 
 
-On top of the convolutional layers I placed 3 fully connected layers with 8096, 800 and 100 neurons respectively before the final 1 neuron output (which predicts the steering angle based on the input image).
+On top of the convolutional layers I placed 3 fully connected layers with 8096, 800 and 100 neurons respectively before the final one neuron output (which predicts the steering angle based on the input image).
 
-#### 3. Managing Overfitting
+The CNN (convolution neural network) used for this project is similar to the one of the NVIDIA paper ["End to End Learning for Self-Driving-Cars"](http://images.nvidia.com/content/tegra/automotive/images/2016/solutions/pdf/end-to-end-dl-using-px.pdf)
 
-While I experimented with some dropout layers I did not use them, since overfitting was not a problem as long as I did not train the model for too much epochs (5 epochs - each epoch with 16384 training generated samples was enough).
+The main differences are that I use 3x3 kernels only while in NVIDIA's paper 5x5 kernels are used the after the first three convolutional layers. Then I also extract more depth out of my convolutional layers and go up to 256 convolutional filters.
 
-The model was trained and validated on different data sets to ensure that the model was not overfitting (code lines 110-119 and 152-162).
+The reason of using 3x3 filters is that in several Imagenet competition papers it is generally believed to produce better accuracy. With a higher filter depth and more neurons on the fully connected layers we have a higher capacity of extracting information. We might need this since our input images have more pixels than NVIDIA's (80x320 after cropping instead of 66x200), but probably we would also achieve similar results using the same architecture as NVIDIA's.
 
- The model was tested by running it after every epoch through the simulator and ensuring that the vehicle could stay on the track.
+#### 3. Collecting Training Data
 
-The model used an adam optimizer, so the learning rate was not tuned manually (data_augmentation.py line 152).
+Four laps were recorded with center lane driving and no recoveries. Of the four laps two were recorded on each track (one reverse lap on each track).
 
-#### 4. Training data
+In total the collected data amounted 21927 sample images coming from three cameras on the top of the car (center, left and right camera angles).
 
-4 laps were recorded with center lane driving and no recoveries. Of the 4 laps 2 were recorded on each track (one reverse lap on each track).
-
- I tried to train a model on only track 1 and with help of data augmentation generalize well on to track 2. For now I have not been able to achieve this with only track 1 data and will require further experimentation and tweaking (also other techniques for data augmentation). Hence for this project I used both track 1 and track 2 training data.
-
-My first step was to use a convolution neural network model similar to the NVIDIA paper ["End to End Learning for Self-Driving-Cars"](http://images.nvidia.com/content/tegra/automotive/images/2016/solutions/pdf/end-to-end-dl-using-px.pdf)
-
-The main differences are that I use 3x3 kernels only while in NVIDIA's paper 5x5 kernels are used the after the first 3 layers. Then I also extract more depth out of my convolutional layers and go up to 256 convolutional filters.
-
-The reason of using 3x3 filters is that in several Imagenet competition papers it is generally believed to produce better accuracy. With a higher filter depth and more neurons on the fully connected layers we have a higher capacity of extracting information. We might need this since our input images have more pixels than NVIDIA's (80x320 after cropping instead of 66x200), but probably we would be also good using the same architecture as NVIDIA's.
+While I tried to train a model on only track 1 and with help of data augmentation generalize well on to track 2 for now I have not been able to achieve this yet. This will be an interesting path to pursue in the future that  will require further experimentation and tweaking (and also other techniques for data augmentation). 
 
 The sampled data was split into 80% training images and 20% test/validation set and then shuffled.
 
-#### 5. Data Augmentation
+
+#### 4. Data Augmentation
 
 To augment the data I used several techniques.
 
@@ -83,7 +78,7 @@ Here are a few examples of the images generated with this approach:
 
 For me the big takeaway is that data augmentation does not only provide a way around small datasets but maybe even more importantly it helps the neural network generalize much better to unseen data by restricting the neural net from making "foolish assumptions". Here is a [good read](https://neil.fraser.name/writing/tank/), which makes this apparent. 
 
-#### 6. Generator
+#### 5. Generator
 
 The data generator which feeds the convolutional neural network during training is defined from lines #73 to #100 of the code. A probability threshold is used to initialize the training of the network with large steering angles (larger as absolute 0.1) and hence avoid a bias towards straight (zero steering angle) driving.
 
@@ -91,7 +86,21 @@ I used a threshold of 1.0 for the first epoch (which means 100% probability of n
 
 Below the distribution of 2000 random selected samples by the generator depicted in a binned histogram. The x-axis corresponds to the steering angles:
 
+#### 6. Managing Overfitting
+
+While I experimented with some dropout layers I did not use them, since overfitting turned not to be a problem. While the model used was relatively large, the input images were rather large (80x320 after cropping). The data augmentation also kept the model from overfitting. Here is a screenshot of the model training over 5 epochs to prove that the model does not overfit:
+
 ![alt text][image3]
+
+In the image the training loss is slightly lower than the validation loss (which is normal) and even when training for more epochs the training and validation loss stay on par.
+
+The model was trained on my awesome Geforce GTX 1070 over 5 epochs.
+The model was tested after every epoch on the simulator checking if the vehicle could stay on the track.
+
+An adam optimizer was chosen for training and thus the learning rate was not tuned manually (data_augmentation.py line 152).
+
+
+![alt text][image4]
 
 
 #### 7. Testing the model 
@@ -100,10 +109,10 @@ The final step was to run the simulator to see how well the car was driving arou
 
 Here is a video of the model driving autonomously around [Track1](./track1.mp4) and [Track2](./track2.mp4).
 
-I also trained a model which outputs also the throttle value as well and successfully drives around [Track1 with throttle](./track1_throttle.mp4). On track 2 it does not come very far but it is a lot of fun to watch [Track2 with throttle](./track2_throttle.mp4). A big problem here comes from using the keyboard for speeding up (which produces unevenly distributed data) and also the signal itself which combines throttle (positive values) with the brake (negative values). Maybe some preprocessing of the signal and maybe even separating the throttle and brake functions into different signals could help here.
+I also trained a model which outputs also the throttle value as well and successfully drives around [Track1 with throttle](./track1_throttle.mp4). On track 2 it does not come very far but it is a lot of fun to watch [Track2 with throttle](./track2_throttle.mp4). A big problem here comes from using the keyboard for speeding up (which produces unevenly distributed data) and also from the signal itself which combines the throttle (positive values) with the brake signal (negative values). Maybe some preprocessing of the signal and perhaps separating the throttle and brake functions into different signals could help here.
 
-
-This project was lots of fun. I could spend forever optimizing this. Still I felt that it was difficult judging the robustness of the pipeline before testing on the simulator.
+This project was lots of fun. I could spend forever optimizing this. Still I felt that it was difficult judging the robustness of the pipeline before testing on the simulator. Actually very recently NVIDIA has released a paper which visualizes the learned features. It seems that the CNN learns to steer the car by learning to detect salient objects like edges of the road, parked cars and lane marks: ["Explaining How a Deep Neural Network Trained with
+End-to-End Learning Steers a Car".]("https://arxiv.org/pdf/1704.07911.pdf)
 
 The main thing I would spend time on for further work on this project would be the data augmentation. I might skip using left and right cameras and instead use random translational shifts of the images (to the sides and also vertically to simulate road slope) while also correcting the steering angle depending of how big the shift was. It would be awesome to achieve generalizing to track 2 while training only on track 1 images.
 
