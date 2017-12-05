@@ -70,7 +70,7 @@ First I used the three cameras on the top of the car (center, left and right). A
 
 Then I also introduced a 50% of probability for the images to getting flipped (while multiplying the steering angle by factor -1 for flipped images). Lines of code #66 to #69.
 
-Finally I also used random shadow and brightness shifts. I got this idea from this awesome [post](https://chatbotslife.com/using-augmentation-to-mimic-human-driving-496b569760a9) by Vivek.
+Finally I also used random shadow and brightness shifts. 
 
 Here are a few examples of the images generated with this approach:
 
